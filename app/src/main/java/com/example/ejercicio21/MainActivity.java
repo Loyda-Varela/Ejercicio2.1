@@ -11,6 +11,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_VIDEO_CAPTURE = 101;
     VideoView videoView;
     Button btnvideo, btnguardar;
-
+    String CurrentPhotoPath;
+    Bitmap VideoGlobal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +49,43 @@ public class MainActivity extends AppCompatActivity {
         //declarar
         btnvideo.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
+            public void onClick(View view){
                 GrabarVideo();
             }
         });
 
+        btnguardar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view){
+                GruardarVideo();
+            }
+        });
+
+    }
+
+    private void GruardarVideo() {
+        SQLiteConexion conexion = new SQLiteConexion(this, Transacciones.CreateTableVideo, null, 1);
+        SQLiteDatabase db = conexion.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+
+        values.put(Transacciones.video, CurrentPhotoPath);
+
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(10480);
+
+        VideoGlobal.compress(Bitmap.CompressFormat.JPEG, 0 , baos);
+
+        byte[] blob = baos.toByteArray();
+
+        values.put(Transacciones.video, blob);
+
+        Long result = db.insert(Transacciones.tablaVideo, Transacciones.id, values);
+
+        Toast.makeText(getApplicationContext(), "Registro exitoso " + result.toString()
+                ,Toast.LENGTH_LONG).show();
+
+        db.close();
     }
 
 
@@ -64,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
-    //obtener el metodo on result
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
